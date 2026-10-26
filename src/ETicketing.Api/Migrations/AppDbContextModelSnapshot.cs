@@ -22,6 +22,140 @@ namespace ETicketing.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ETicketing.Api.Entities.LedgerEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccountCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EntryType")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("PaymentTransactionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentTransactionId", "AccountCode")
+                        .IsUnique();
+
+                    b.ToTable("LedgerEntries", t =>
+                        {
+                            t.HasCheckConstraint("CK_LedgerEntries_AccountCode", "[AccountCode] IN ('CASH', 'TICKET_REVENUE')");
+
+                            t.HasCheckConstraint("CK_LedgerEntries_Amount", "[Amount] > 0");
+
+                            t.HasCheckConstraint("CK_LedgerEntries_EntryType", "[EntryType] IN ('Debit', 'Credit')");
+                        });
+                });
+
+            modelBuilder.Entity("ETicketing.Api.Entities.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("Orders", t =>
+                        {
+                            t.HasCheckConstraint("CK_Orders_Amounts", "[UnitPrice] > 0 AND [TotalAmount] > 0");
+
+                            t.HasCheckConstraint("CK_Orders_Quantity", "[Quantity] > 0");
+                        });
+                });
+
+            modelBuilder.Entity("ETicketing.Api.Entities.PaymentTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ConfirmationDueAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("Status", "ConfirmationDueAt");
+
+                    b.ToTable("PaymentTransactions");
+                });
+
             modelBuilder.Entity("ETicketing.Api.Entities.Ticket", b =>
                 {
                     b.Property<int>("Id")
@@ -76,7 +210,7 @@ namespace ETicketing.Api.Migrations
                         {
                             Id = 1,
                             AvailableQuota = 100,
-                            CreatedAt = new DateTime(2026, 10, 26, 3, 50, 42, 716, DateTimeKind.Utc).AddTicks(8226),
+                            CreatedAt = new DateTime(2026, 10, 26, 9, 27, 2, 900, DateTimeKind.Utc).AddTicks(6831),
                             IsActive = true,
                             Name = "Gold",
                             Price = 100m,
@@ -87,7 +221,7 @@ namespace ETicketing.Api.Migrations
                         {
                             Id = 2,
                             AvailableQuota = 200,
-                            CreatedAt = new DateTime(2026, 10, 26, 3, 50, 42, 716, DateTimeKind.Utc).AddTicks(8234),
+                            CreatedAt = new DateTime(2026, 10, 26, 9, 27, 2, 900, DateTimeKind.Utc).AddTicks(6840),
                             IsActive = true,
                             Name = "Premium",
                             Price = 200m,
@@ -98,13 +232,46 @@ namespace ETicketing.Api.Migrations
                         {
                             Id = 3,
                             AvailableQuota = 50,
-                            CreatedAt = new DateTime(2026, 10, 26, 3, 50, 42, 716, DateTimeKind.Utc).AddTicks(8236),
+                            CreatedAt = new DateTime(2026, 10, 26, 9, 27, 2, 900, DateTimeKind.Utc).AddTicks(6841),
                             IsActive = true,
                             Name = "VIP",
                             Price = 500m,
                             RowVersion = new byte[0],
                             TotalQuota = 50
                         });
+                });
+
+            modelBuilder.Entity("ETicketing.Api.Entities.LedgerEntry", b =>
+                {
+                    b.HasOne("ETicketing.Api.Entities.PaymentTransaction", "PaymentTransaction")
+                        .WithMany()
+                        .HasForeignKey("PaymentTransactionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PaymentTransaction");
+                });
+
+            modelBuilder.Entity("ETicketing.Api.Entities.Order", b =>
+                {
+                    b.HasOne("ETicketing.Api.Entities.Ticket", "Ticket")
+                        .WithMany()
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("ETicketing.Api.Entities.PaymentTransaction", b =>
+                {
+                    b.HasOne("ETicketing.Api.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
                 });
 #pragma warning restore 612, 618
         }

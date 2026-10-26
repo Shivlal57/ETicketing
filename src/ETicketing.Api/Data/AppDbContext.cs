@@ -9,6 +9,9 @@ namespace ETicketing.Api.Data
         {
         }
         public DbSet<Ticket> Tickets => Set<Ticket>();
+        public DbSet<Order> Orders => Set<Order>();
+        public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
+        public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -75,6 +78,102 @@ namespace ETicketing.Api.Data
                     }
                 );
             });
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.HasKey(o => o.Id);
+
+                entity.Property(o => o.UnitPrice)
+                    .HasPrecision(18, 2);
+
+                entity.Property(o => o.TotalAmount)
+                    .HasPrecision(18, 2);
+
+                entity.Property(o => o.Status)
+                    .HasMaxLength(30)
+                    .IsRequired();
+
+                entity.HasOne(o => o.Ticket)
+                    .WithMany()
+                    .HasForeignKey(o => o.TicketId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.ToTable(table =>
+                {
+                    table.HasCheckConstraint(
+                        "CK_Orders_Quantity",
+                        "[Quantity] > 0");
+
+                    table.HasCheckConstraint(
+                        "CK_Orders_Amounts",
+                        "[UnitPrice] > 0 AND [TotalAmount] > 0");
+                });
+            });
+
+            modelBuilder.Entity<PaymentTransaction>(entity =>
+            {
+                entity.HasKey(p => p.Id);
+
+                entity.Property(p => p.Amount)
+                    .HasPrecision(18, 2);
+
+                entity.Property(p => p.PaymentMethod)
+                    .HasConversion<string>()
+                    .HasMaxLength(20);
+
+                entity.Property(p => p.Status)
+                    .HasConversion<string>()
+                    .HasMaxLength(20);
+
+                entity.HasOne(p => p.Order)
+                    .WithMany()
+                    .HasForeignKey(p => p.OrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(p => new { p.Status, p.ConfirmationDueAt });
+            });
+
+            modelBuilder.Entity<LedgerEntry>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.AccountCode)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(e => e.EntryType)
+                    .HasMaxLength(10)
+                    .IsRequired();
+
+                entity.Property(e => e.Amount)
+                    .HasPrecision(18, 2);
+
+                entity.HasOne(e => e.PaymentTransaction)
+                    .WithMany()
+                    .HasForeignKey(e => e.PaymentTransactionId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new
+                {
+                    e.PaymentTransactionId,
+                    e.AccountCode
+                }).IsUnique();
+
+                entity.ToTable(table =>
+                {
+                    table.HasCheckConstraint(
+                        "CK_LedgerEntries_Amount",
+                        "[Amount] > 0");
+
+                    table.HasCheckConstraint(
+                        "CK_LedgerEntries_EntryType",
+                        "[EntryType] IN ('Debit', 'Credit')");
+
+                    table.HasCheckConstraint(
+                        "CK_LedgerEntries_AccountCode",
+                        "[AccountCode] IN ('CASH', 'TICKET_REVENUE')");
+                });
+            });
+
         }
     }
 }
