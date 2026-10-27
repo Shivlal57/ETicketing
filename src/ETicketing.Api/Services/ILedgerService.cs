@@ -2,6 +2,6 @@
 {
     public interface ILedgerService
     {
-        Task PostPaymentAsync(int paymentTransactionId,CancellationToken cancellationToken);
+        Task CompletePaymentAsync(int paymentTransactionId,CancellationToken cancellationToken);
     }
 }

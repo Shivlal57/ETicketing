@@ -1,3 +1,4 @@
+using ETicketing.Api.BackgroundServices;
 using ETicketing.Api.Data;
 using ETicketing.Api.Entities;
 using ETicketing.Api.Services;
@@ -19,6 +20,7 @@ builder.Services.AddScoped<IPaymentHandler, QRHandler>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ILedgerService, LedgerService>();
 
+builder.Services.AddHostedService<QrPaymentConfirmationWorker>();
 
 var app = builder.Build();
 

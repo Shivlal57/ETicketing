@@ -9,11 +9,13 @@ namespace ETicketing.Api.Services
     {
         private readonly AppDbContext _dbContext;
         private readonly IReadOnlyDictionary<PaymentMethod, IPaymentHandler> _handlers;
+        private readonly ILedgerService _ledgerService;
 
-        public PaymentService(AppDbContext dbContext, IEnumerable<IPaymentHandler> handlers)
+        public PaymentService(AppDbContext dbContext, IEnumerable<IPaymentHandler> handlers, ILedgerService ledgerService)
         {
             _dbContext = dbContext;
             _handlers = handlers.ToDictionary(handler => handler.Method);
+            _ledgerService = ledgerService;
         }
 
         public async Task<PaymentResponseDto> CheckoutAsync(PaymentRequestDto request, CancellationToken cancellationToken)
@@ -21,6 +23,10 @@ namespace ETicketing.Api.Services
             if (!Enum.IsDefined(typeof(PaymentMethod), request.PaymentMethod))
             {
                 throw new ArgumentException("Invalid payment method.");
+            }
+            if (!_handlers.TryGetValue(request.PaymentMethod, out var handler))
+            {
+                throw new ArgumentException("Unsupported payment method.");
             }
 
             await using var dbTransaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -49,35 +55,40 @@ namespace ETicketing.Api.Services
                 throw new InvalidOperationException("A pending or successful payment already exists for this order.");
             }
 
-            var handler = _handlers[request.PaymentMethod];
+            var simulatedStatus = await handler.ProcessAsync(cancellationToken);
+            if (simulatedStatus != PaymentStatus.Succeeded && simulatedStatus != PaymentStatus.Pending)
+            {
+                throw new InvalidOperationException("The payment handler returned an unsupported status.");
+            }
 
             var now = DateTime.UtcNow;
-
-            var status = await handler.ProcessAsync(cancellationToken);
 
             var payment = new PaymentTransaction
             {
                 OrderId = order.Id,
                 Amount = order.TotalAmount,
                 PaymentMethod = request.PaymentMethod,
-                Status = status,
+                Status = PaymentStatus.Pending,
                 CreatedAt = now,
-                CompletedAt = status == PaymentStatus.Succeeded ? now : null,
-                ConfirmationDueAt = request.PaymentMethod == PaymentMethod.QR ? now.AddSeconds(8) : null
+                CompletedAt = null,
+                ConfirmationDueAt =request.PaymentMethod == PaymentMethod.QR ? now.AddSeconds(8) : null
             };
 
             _dbContext.PaymentTransactions.Add(payment);
 
-            if (status == PaymentStatus.Succeeded)
-            {
-                order.Status = "Paid";
-                order.UpdatedAt = now;
-            }
-
             await _dbContext.SaveChangesAsync(cancellationToken);
             await dbTransaction.CommitAsync(cancellationToken);
 
-            return MapResponse(payment);
+            if (simulatedStatus == PaymentStatus.Succeeded)
+            {
+                await _ledgerService.CompletePaymentAsync(
+                    payment.Id,
+                    cancellationToken);
+            }
+
+            var result = await _dbContext.PaymentTransactions.AsNoTracking().SingleAsync(p => p.Id == payment.Id,cancellationToken);
+
+            return MapResponse(result);
         }
 
         public async Task<PaymentResponseDto?> GetPaymentAsync(int transactionId, CancellationToken cancellationToken)
