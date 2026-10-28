@@ -1,0 +1,461 @@
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+
+:root {
+    font-family: "DM Sans", sans-serif;
+    color: #20251f;
+    background: #f8f9f6;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-optical-sizing: auto;
+    font-weight: 400;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+}
+
+button {
+    font: inherit;
+}
+
+.navbar {
+    height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 max(6%, calc((100% - 1120px) / 2));
+    background: #fff;
+    border-bottom: 1px solid #e9ece6;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #20251f;
+    font-family: "Manrope", sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    text-decoration: none;
+}
+
+.brand-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    background: #263d30;
+    color: #fff;
+    border-radius: 10px;
+}
+
+.nav-label {
+    font-size: 14px;
+    color: #687269;
+}
+
+.container {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 66px 24px 28px;
+}
+
+.intro {
+    max-width: 650px;
+    margin-bottom: 38px;
+}
+
+.eyebrow {
+    color: #6a7f53;
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-weight: 700;
+}
+
+.intro h1 {
+    margin: 12px 0;
+    font-family: "Manrope", sans-serif;
+    font-size: clamp(34px, 5vw, 52px);
+    line-height: 1.15;
+    letter-spacing: -2px;
+}
+
+.intro p {
+    color: #687269;
+    font-size: 16px;
+    line-height: 1.8;
+    max-width: 540px;
+}
+
+.ticket-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.ticket-card {
+    text-align: left;
+    min-width: 0;
+    padding: 24px;
+    border: 1px solid #e2e5dc;
+    border-radius: 18px;
+    background: #fff;
+    color: #20251f;
+    cursor: pointer;
+    transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+    .ticket-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px #263d3010;
+    }
+
+    .ticket-card.selected {
+        border: 2px solid #405b42;
+        padding: 23px;
+        box-shadow: 0 0 0 3px #405b420d;
+    }
+
+.ticket-top,
+.ticket-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.ticket-label {
+    color: #7b8178;
+    font-size: 10px;
+    letter-spacing: 1.6px;
+    font-weight: 700;
+}
+
+.ticket-symbol {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #f4ead0;
+    color: #87631f;
+    font-family: "Manrope", sans-serif;
+    font-weight: 800;
+}
+
+.premium .ticket-symbol {
+    background: #e8eee6;
+    color: #45654c;
+}
+
+.vip .ticket-symbol {
+    background: #ece8f5;
+    color: #67528b;
+}
+
+.ticket-card h2 {
+    font-family: "Manrope", sans-serif;
+    font-size: 25px;
+    margin: 22px 0 8px;
+}
+
+.ticket-description {
+    min-height: 44px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #727a70;
+}
+
+.ticket-price {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 24px 0;
+}
+
+    .ticket-price span {
+        font-size: 12px;
+        color: #6b7569;
+    }
+
+    .ticket-price strong {
+        font-family: "Manrope", sans-serif;
+        font-size: 34px;
+        letter-spacing: -1px;
+    }
+
+.ticket-bottom {
+    padding-top: 16px;
+    border-top: 1px solid #edf0e9;
+    font-size: 11px;
+    color: #70786d;
+}
+
+    .ticket-bottom span:last-child {
+        color: #405b42;
+        font-weight: 700;
+    }
+
+.checkout-panel {
+    margin-top: 38px;
+    padding: 30px;
+    background: #fff;
+    border: 1px solid #e6e9e1;
+    border-radius: 18px;
+}
+
+.checkout-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+    .checkout-heading h2 {
+        font-family: "Manrope", sans-serif;
+        font-size: 22px;
+        margin: 8px 0 0;
+    }
+
+.secure-label {
+    color: #45654c;
+    background: #edf4e9;
+    border-radius: 30px;
+    padding: 9px 13px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.checkout-details {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 26px 0;
+    margin-top: 22px;
+    border-top: 1px solid #edf0e9;
+}
+
+.quantity-control label,
+.order-total > span {
+    display: block;
+    color: #737b70;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.quantity-buttons {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+    .quantity-buttons button {
+        width: 34px;
+        height: 34px;
+        border: 1px solid #dce2d7;
+        background: #fff;
+        border-radius: 9px;
+        cursor: pointer;
+        font-size: 20px;
+    }
+
+        .quantity-buttons button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+.order-total {
+    text-align: right;
+}
+
+    .order-total strong {
+        display: block;
+        font-family: "Manrope", sans-serif;
+        font-size: 27px;
+    }
+
+    .order-total small {
+        display: block;
+        margin-top: 5px;
+        color: #737b70;
+    }
+
+.checkout-button {
+    width: 100%;
+    padding: 16px 20px;
+    border: 0;
+    border-radius: 10px;
+    background: #263d30;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: background 160ms ease;
+}
+
+    .checkout-button:hover {
+        background: #385640;
+    }
+
+    .checkout-button span {
+        font-size: 19px;
+    }
+
+.checkout-note {
+    text-align: center;
+    margin: 14px 0 0;
+    font-size: 11px;
+    color: #7a8176;
+}
+
+footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid #e6e9e1;
+    color: #858b81;
+    font-size: 11px;
+}
+
+@media (max-width: 760px) {
+    .container {
+        padding: 42px 18px 24px;
+    }
+
+    .ticket-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ticket-card {
+        padding: 22px;
+    }
+
+        .ticket-card.selected {
+            padding: 21px;
+        }
+
+    .ticket-description {
+        min-height: auto;
+    }
+
+    .checkout-panel {
+        padding: 22px;
+    }
+}
+
+@media (max-width: 420px) {
+    .nav-label {
+        font-size: 12px;
+    }
+
+    .checkout-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .checkout-details {
+        gap: 12px;
+    }
+
+    .order-total strong {
+        font-size: 22px;
+    }
+
+    footer {
+        flex-direction: column;
+    }
+
+    .error-message,
+    .notice-message {
+        margin: 18px 0;
+        padding: 14px 16px;
+        border-radius: 10px;
+        font-size: 14px;
+    }
+
+    .error-message {
+        color: #8d2828;
+        background: #fff0ef;
+        border: 1px solid #f0ceca;
+    }
+
+    .notice-message {
+        color: #755819;
+        background: #fff8e6;
+    }
+
+    .payment-select {
+        display: block;
+        width: 100%;
+        margin: 10px 0 20px;
+        padding: 13px;
+        border: 1px solid #dce2d7;
+        border-radius: 9px;
+        background: white;
+        color: #20251f;
+    }
+
+    .checkout-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .success-panel {
+        max-width: 620px;
+        margin: 40px auto;
+        text-align: center;
+    }
+
+        .success-panel h1 {
+            font-family: "Manrope", sans-serif;
+        }
+
+    .success-icon {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        background: #e5f3e5;
+        color: #27633a;
+        font-size: 32px;
+    }
+
+    .transaction-details {
+        display: grid;
+        gap: 12px;
+        text-align: left;
+        padding: 22px;
+        margin: 28px 0;
+        background: #f8f9f6;
+        border-radius: 12px;
+        overflow-wrap: anywhere;
+    }
+
+        .transaction-details span {
+            color: #737b70;
+            font-size: 12px;
+        }
+
+        .transaction-details strong {
+            margin-bottom: 8px;
+        }
+
+}
