@@ -1,6 +1,7 @@
 ﻿using ETicketing.Api.Data;
 using ETicketing.Api.DTOs;
 using ETicketing.Api.Entities;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace ETicketing.Api.Services
@@ -71,13 +72,25 @@ namespace ETicketing.Api.Services
                 Status = PaymentStatus.Pending,
                 CreatedAt = now,
                 CompletedAt = null,
-                ConfirmationDueAt =request.PaymentMethod == PaymentMethod.QR ? now.AddSeconds(8) : null
+                ConfirmationDueAt =request.PaymentMethod == PaymentMethod.QR ? now.AddSeconds(8) : now
             };
 
             _dbContext.PaymentTransactions.Add(payment);
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            await dbTransaction.CommitAsync(cancellationToken);
+            try
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await dbTransaction.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex)
+                when (ex.GetBaseException() is SqlException sqlException
+                      && (sqlException.Number == 2601 || sqlException.Number == 2627))
+            {
+                await dbTransaction.RollbackAsync(CancellationToken.None);
+                _dbContext.Entry(payment).State = EntityState.Detached;
+
+                throw new InvalidOperationException("A pending or successful payment already exists for this order.",ex);
+            }
 
             if (simulatedStatus == PaymentStatus.Succeeded)
             {

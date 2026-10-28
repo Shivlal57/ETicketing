@@ -149,7 +149,9 @@ namespace ETicketing.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderId");
+                    b.HasIndex("OrderId")
+                        .IsUnique()
+                        .HasFilter("[Status] IN ('Pending', 'Succeeded')");
 
                     b.HasIndex("Status", "ConfirmationDueAt");
 
@@ -210,7 +212,7 @@ namespace ETicketing.Api.Migrations
                         {
                             Id = 1,
                             AvailableQuota = 100,
-                            CreatedAt = new DateTime(2026, 10, 26, 9, 27, 2, 900, DateTimeKind.Utc).AddTicks(6831),
+                            CreatedAt = new DateTime(2026, 10, 27, 15, 13, 50, 956, DateTimeKind.Utc).AddTicks(5886),
                             IsActive = true,
                             Name = "Gold",
                             Price = 100m,
@@ -221,7 +223,7 @@ namespace ETicketing.Api.Migrations
                         {
                             Id = 2,
                             AvailableQuota = 200,
-                            CreatedAt = new DateTime(2026, 10, 26, 9, 27, 2, 900, DateTimeKind.Utc).AddTicks(6840),
+                            CreatedAt = new DateTime(2026, 10, 27, 15, 13, 50, 956, DateTimeKind.Utc).AddTicks(5894),
                             IsActive = true,
                             Name = "Premium",
                             Price = 200m,
@@ -232,7 +234,7 @@ namespace ETicketing.Api.Migrations
                         {
                             Id = 3,
                             AvailableQuota = 50,
-                            CreatedAt = new DateTime(2026, 10, 26, 9, 27, 2, 900, DateTimeKind.Utc).AddTicks(6841),
+                            CreatedAt = new DateTime(2026, 10, 27, 15, 13, 50, 956, DateTimeKind.Utc).AddTicks(5895),
                             IsActive = true,
                             Name = "VIP",
                             Price = 500m,

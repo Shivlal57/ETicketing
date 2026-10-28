@@ -130,6 +130,8 @@ namespace ETicketing.Api.Data
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasIndex(p => new { p.Status, p.ConfirmationDueAt });
+
+                entity.HasIndex(p => p.OrderId).IsUnique().HasFilter("[Status] IN ('Pending', 'Succeeded')");
             });
 
             modelBuilder.Entity<LedgerEntry>(entity =>

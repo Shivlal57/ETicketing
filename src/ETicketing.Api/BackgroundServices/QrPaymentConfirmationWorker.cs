@@ -2,6 +2,7 @@
 using ETicketing.Api.Entities;
 using ETicketing.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ETicketing.Api.BackgroundServices
 {
@@ -63,27 +64,21 @@ namespace ETicketing.Api.BackgroundServices
 
             var now = DateTime.UtcNow;
 
-            var paymentIds = await dbContext.PaymentTransactions
-                .AsNoTracking()
-                .Where(p =>
-                    p.PaymentMethod == PaymentMethod.QR &&
-                    p.Status == PaymentStatus.Pending &&
-                    p.ConfirmationDueAt != null &&
-                    p.ConfirmationDueAt <= now)
-                .OrderBy(p => p.ConfirmationDueAt)
-                .Select(p => p.Id)
-                .Take(20)
-                .ToListAsync(cancellationToken);
+            var payments = await dbContext.PaymentTransactions
+                    .Where(p =>
+                        p.Status == PaymentStatus.Pending &&
+                        p.ConfirmationDueAt != null &&
+                        p.ConfirmationDueAt <= now)
+                    .OrderBy(p => p.ConfirmationDueAt)
+                    .Take(20)
+                    .Select(p => p.Id)
+                    .ToListAsync(cancellationToken);
 
-            foreach (var paymentId in paymentIds)
+            foreach (var paymentId in payments)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
                 try
                 {
                     await ledgerService.CompletePaymentAsync(paymentId,cancellationToken);
-
-                    _logger.LogInformation("QR payment {PaymentId} completed successfully.",paymentId);
                 }
                 catch (OperationCanceledException)
                     when (cancellationToken.IsCancellationRequested)
@@ -92,7 +87,7 @@ namespace ETicketing.Api.BackgroundServices
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to complete QR payment {PaymentId}. It will be retried on a later poll if it remains pending.",paymentId);
+                    _logger.LogError(ex,"Failed to complete payment {PaymentId}. It will be retried.",paymentId);
                 }
             }
         }
