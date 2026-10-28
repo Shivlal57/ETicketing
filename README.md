@@ -1,185 +1,66 @@
-# ETicketing API
+# E-Ticketing System
 
-A RESTful API built with **ASP.NET Core .NET 8** for an e-ticketing system. The application uses SQL Server for data storage and Swagger for API documentation and testing.
+A ticket booking API built with **ASP.NET Core 8, EF Core, SQL Server, and React**, featuring simulated payments and a double-entry accounting ledger.
 
-## Tech Stack
+## Features
 
-- C# and .NET 8
-- ASP.NET Core Web API
-- SQL Server
-- Entity Framework Core
-- Docker
-- Swagger
+- Gold (AED 100), Premium (AED 200), and VIP (AED 500) tickets.
+- Order creation with server-side total calculation and quota protection.
+- Credit Card (immediate success) and QR (success after 8 seconds) payments.
+- Double-entry ledger for successful payments.
+- Docker Compose and GitHub Actions CI.
 
-## Prerequisites
+## Database ERD
 
-Install the following before running the application:
-
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- SQL Server
-- [SQL Server Management Studio (SSMS)](https://learn.microsoft.com/en-us/ssms/install/install)
-
-## Project Structure
-
-```text
-ETicketing/
-??? ETicketing.sln
-??? Dockerfile
-??? .dockerignore
-??? README.md
-??? src/
-    ??? ETicketing.Api/
-        ??? ETicketing.Api.csproj
+```mermaid
+erDiagram
+    Tickets ||--o{ Orders : has
+    Orders ||--o{ PaymentTransactions : has
+    PaymentTransactions ||--o{ LedgerEntries : records
 ```
 
-## Configuration
+## Ledger Consistency
 
-The application reads its database connection string from the `ConnectionStrings:DefaultConnection` configuration key.
+When a payment succeeds, the API updates the payment status, marks the order as paid, and creates two ledger entries in a single database transaction:
 
-For environment variables, ASP.NET Core uses double underscores (`__`) to represent configuration sections.
+- **Debit:** `CASH`
+- **Credit:** `TICKET_REVENUE`
 
-The corresponding environment variable is:
+Both entries have the same amount, keeping total debits equal to total credits.
 
-```text
-ConnectionStrings__DefaultConnection
-```
-
-Do not commit database passwords or other secrets to source control.
-
-### SQL Server connection examples
-
-When running the API directly on Windows:
-
-```text
-Server=localhost,1433;Database=ETicketingDb;User Id=YOUR_SQL_USERNAME;Password=YOUR_SQL_PASSWORD;TrustServerCertificate=True;
-```
-
-When running the API inside Docker while SQL Server runs on the Windows host:
-
-```text
-Server=host.docker.internal,1433;Database=ETicketingDb;User Id=YOUR_SQL_USERNAME;Password=YOUR_SQL_PASSWORD;TrustServerCertificate=True;
-```
-
-Replace the example username and password with your own credentials. Ensure SQL Server TCP/IP is enabled and that the configured port matches your SQL Server instance.
-
-## Run Locally
-
-1. Open a terminal in the solution root.
-2. Configure the database connection string as a user environment variable, or use .NET User Secrets for local development.
-3. Restore dependencies:
-
-   ```powershell
-   dotnet restore ETicketing.sln
-   ```
-
-4. Run the API project:
-
-   ```powershell
-   dotnet run --project src/ETicketing.Api/ETicketing.Api.csproj
-   ```
-
-5. Open the Swagger URL shown in the terminal output. In Development, it is commonly available at:
-
-   ```text
-   http://localhost:PORT/swagger
-   ```
-
-   Replace `PORT` with the actual port printed by the application.
+If the API crashes before the transaction commits, the database rolls back the uncommitted changes. If it crashes after commit, all changes are already persisted. Conditional payment updates and database constraints help prevent duplicate ledger posting. A background worker retries due QR payment completions.
 
 ## Run with Docker
 
-Make sure Docker Desktop is running.
+**Prerequisite:** Docker Desktop installed and running.
 
-### 1. Build the image
+From the repository root:
 
-Run this command from the solution root:
-
-```powershell
-docker build -t eticketing-api .
+```bash
+docker compose up --build
 ```
 
-### 2. Configure the database connection
+Ensure EF Core migrations are applied to a fresh database before using the API if automatic migration is not configured.
 
-Set a connection string in your PowerShell session. Use `host.docker.internal` because SQL Server is running on the Windows host:
+Stop the containers:
 
-```powershell
-$conn = "Server=host.docker.internal,1433;Database=ETicketingDb;User Id=YOUR_SQL_USERNAME;Password=YOUR_SQL_PASSWORD;TrustServerCertificate=True;"
+```bash
+docker compose down
 ```
 
-Replace the placeholder credentials before running the container.
+## Tests and CI/CD
 
-### 3. Start the container
+Run tests locally:
 
-```powershell
-docker run -d --name eticketing-api -p 8080:8080 `
-  -e "ASPNETCORE_ENVIRONMENT=Development" `
-  -e "ConnectionStrings__DefaultConnection=$conn" `
-  eticketing-api
+```bash
+dotnet test ETicketing.sln --configuration Release
 ```
 
-### 4. Open Swagger
+GitHub Actions (`.github/workflows/dotnet.yml`) runs `dotnet build` and `dotnet test` on pushes and pull requests.
 
-Visit:
+## Main API Endpoints
 
-```text
-http://localhost:8080/swagger
-```
-
-### 5. View logs
-
-```powershell
-docker logs eticketing-api
-```
-
-Follow logs continuously:
-
-```powershell
-docker logs -f eticketing-api
-```
-
-### 6. Stop and remove the container
-
-```powershell
-docker stop eticketing-api
-docker rm eticketing-api
-```
-
-To start it again after stopping, use `docker start eticketing-api`.
-
-## Troubleshooting
-
-### Cannot connect to SQL Server
-
-- Confirm the SQL Server service is running.
-- Enable TCP/IP in SQL Server Configuration Manager.
-- Confirm the SQL Server TCP port is correct.
-- Use `host.docker.internal` from inside Docker instead of `localhost`.
-- Verify the database name and SQL Server credentials.
-- Check the container logs for the underlying exception.
-
-### Swagger does not open
-
-- Confirm the container is running:
-
-  ```powershell
-  docker ps
-  ```
-
-- Check the application logs:
-
-  ```powershell
-  docker logs eticketing-api
-  ```
-
-- Confirm port `8080` is mapped using `-p 8080:8080`.
-- Verify Swagger is enabled for the selected environment.
-
-## Security Notes
-
-- Never commit passwords, API keys, or production connection strings.
-- Keep `.env` files and local secret files out of source control.
-- Use .NET User Secrets for local development when running outside Docker.
-- Use an appropriate secret manager or deployment secret configuration for production.
-- Avoid using Development settings in production.
-
+| GET | `/api/Tickets` | List tickets |
+| POST | `/api/Orders` | Create an order |
+| POST | `/api/Payments/checkout` | Start payment |
+| GET | `/api/Payments/{transactionId}` | Check payment status |
